@@ -1,6 +1,8 @@
 import xml.dom.minidom
 
+from os import system
 from Practica.User import user
+from Practica.Pila import pila
 
 class ListaUsuario:
 
@@ -9,8 +11,6 @@ class ListaUsuario:
         self.fin = None
         self.usuarioLogueado = None
         self.isLogueado = False
-        self.cargaArchivo = False
-
 
     def validaVacia(self):
         if self.inicio == None:
@@ -136,34 +136,26 @@ class ListaUsuario:
             y = int(valorY.childNodes[0].data)
 
         #print("valor x: "+ str (x) + " valor y: " + str (y))
-
-        listaOperaciones = []
-
         operaciones = coleccion.getElementsByTagName("operaciones")
-
-        for operacion in operaciones:
-            opeTemp = operacion.getElementsByTagName('operacion')
-            for opeTemp2 in opeTemp:
-                ope = opeTemp2.childNodes[0].data
-                #print("operacion: "+ ope)
-                if ope != None:
-                    listaOperaciones.append(ope)
 
         temp = self.inicio
         while temp:
             if temp.usuario == usuarioLogueado:
                 if not temp.matriz :
                     temp.matriz = [[0] * y for i in range (x)]
+                    temp.matrizTranspuesta = [[0] * x for i in range (y)]
                 else:
                     print("Matriz ya esta definida.")
 
-                if temp.listaOpera == None:
-                    temp.listaOpera = listaOperaciones
-                else:
-                    for ope in listaOperaciones:
-                        temp.listaOpera.append(ope)
+                for operacion in operaciones:
+                    opeTemp = operacion.getElementsByTagName('operacion')
+                    for opeTemp2 in opeTemp:
+                        ope = opeTemp2.childNodes[0].data
+                        # print("operacion: "+ ope)
+                        if ope != None:
+                            temp.listaOpera.push(ope)
 
-                self.cargaArchivo = True
+                temp.cargaArchivo = True
                 return "Carga exitosa."
             else:
                 temp = temp.siguiente
@@ -174,13 +166,193 @@ class ListaUsuario:
         temp = self.inicio
         while temp:
             if temp.usuario == usuarioLogueado:
-                i = 0
-                for operacion in temp.listaOpera:
-                    print("indice "+str(i) +": " + operacion)
-                    i = i + 1
+                pilaTemp = pila()
+                if temp.listaOpera.es_vacia() == True:
+                    print("la pila esta vacia.")
+                else:
+                    i =0
+                    while temp.listaOpera.es_vacia() == False:
+                        valor = temp.listaOpera.pop()
+                        print("indice "+str(i) +": " + valor)
+                        pilaTemp.push(valor)
+                        i = i + 1
+
+                    while pilaTemp.es_vacia() == False:
+                        valor2 = pilaTemp.pop()
+                        temp.listaOpera.push(valor2)
                 break
             else:
                 temp = temp.siguiente
                 if temp == self.inicio:
                     return "No hay usuario logueado."
                     break
+
+    def operarQueue(self,usuarioLogueado):
+        tempPila = pila()
+        temp = self.inicio
+        while temp:
+            if temp.usuario == usuarioLogueado:
+                operacionQueue = temp.listaOpera.pop()
+                #print("operacion base: "+operacionQueue)
+                if operacionQueue != None and operacionQueue != "":
+                    valorPila = ""
+                    for x in operacionQueue:
+                        #print("caracter: " + x)
+                        tipo = self.validaCaracter(x)
+                        if tipo == "int":
+                            valorPila = valorPila +""+ x
+                        elif tipo == "space":
+                            #print("almacena valor de pila: " +valorPila)
+                            if valorPila != "":
+                                tempPila.push(valorPila)
+                                valorPila = ""
+                        elif tipo == "ope":
+                            tempPila.push(x)
+
+                            tipoOperacion = tempPila.pop()
+                            #print("ope: " + tipoOperacion)
+                            valor2 = tempPila.pop()
+                            #print("val2: " + valor2)
+                            valor1 = tempPila.pop()
+                            #print("val1: " + valor1)
+
+                            resultado = self.realizarOperacion(valor1,valor2,tipoOperacion)
+                            tempPila.push(str(resultado))
+                        elif tipo == "stc":
+                            print("la operacion contiene caracteres, no se pudo operar.")
+                            break
+                    print("resultado: " + tempPila.pop())
+                    break
+
+            else:
+                temp = temp.siguiente
+                if temp == self.inicio:
+                    return "No hay usuario logueado."
+                    break
+
+    def validaCaracter(self,caracter):
+        if caracter.isalpha():
+            return "str"
+        elif caracter.isdigit():
+            return "int"
+        elif (caracter == "+") or (caracter == "-") or (caracter == "*"):
+            return "ope"
+        elif caracter.isspace():
+            return "space"
+        else:
+            return ""
+
+    def realizarOperacion(self,valor1,valor2,tipoOperacion):
+        if tipoOperacion == "+":
+            val1 = int(valor1)
+            val2 = int(valor2)
+            resultado = val1 + val2
+            print(str(valor1) + "+" + str(valor2) + "=" + str(resultado))
+            return resultado
+        elif tipoOperacion == "-":
+            val1 = int(valor1)
+            val2 = int(valor2)
+            resultado = val1 - val2
+            print(str(valor1) + "-" + str(valor2) + "=" + str(resultado))
+            return resultado
+        elif tipoOperacion == "*":
+            val1 = int(valor1)
+            val2 = int(valor2)
+            resultado = val1 * val2
+            print(str(valor1) + "*" + str(valor2) + "=" + str(resultado))
+            return resultado
+        else:
+            print("operacion no encontrada: " + tipoOperacion)
+            return ""
+
+    def llenarMatriz(self,usuarioLogueado):
+        temp = self.inicio
+        while temp:
+            if temp.usuario == usuarioLogueado:
+                for x in range(len(temp.matriz)):
+                    for y in range(len(temp.matriz[0])):
+                        valor = input("ingrese valor posicion [" +str(x)+"][" + str(y)+ "]: ")
+                        while valor!="":
+                            if valor.isdigit():
+                                temp.matriz[x][y] = valor
+                                break
+                            else:
+                                valor = input("invalido, ingrese valor posicion [" + str(x) + "][" + str(y) + "]: ")
+                temp.matrizLlena = True
+                break
+            else:
+                temp = temp.siguiente
+                if temp == self.inicio:
+                    return "No hay usuario logueado."
+                    break
+
+    def operarMatrizTranspuesta(self,usuarioLogueado):
+        temp = self.inicio
+        while temp:
+            if temp.usuario == usuarioLogueado:
+                if temp.matrizLlena:
+                    for i in range(len(temp.matriz)):
+                        for j in range(len(temp.matriz[0])):
+                            temp.matrizTranspuesta[j][i] = temp.matriz[i][j]
+                    temp.matrizTransOperada = True
+                else:
+                    print("llene la matriz antes de operar.")
+                break
+            else:
+                temp = temp.siguiente
+                if temp == self.inicio:
+                    return "No hay usuario logueado."
+                    break
+
+    def mostrarMatrizOriginal(self,usuarioLogueado):
+        temp = self.inicio
+        while temp:
+            if temp.usuario == usuarioLogueado:
+                if temp.matrizLlena:
+                    for x in range(len(temp.matriz)):
+                        valor ="|"
+                        for y in range(len(temp.matriz[0])):
+                            valor =valor +" "+ temp.matriz[x][y]
+                        print(valor+"|")
+                    break
+                else:
+                    print("debe llenar la matriz.")
+                break
+            else:
+                temp = temp.siguiente
+                if temp == self.inicio:
+                    return "No hay usuario logueado."
+                    break
+
+    def mostrarMatrizTranspuesta(self, usuarioLogueado):
+        temp = self.inicio
+        while temp:
+            if temp.usuario == usuarioLogueado:
+                if temp.matrizTransOperada:
+                    for x in range(len(temp.matrizTranspuesta)):
+                        valor = "|"
+                        for y in range(len(temp.matrizTranspuesta[0])):
+                            valor = valor + " " + temp.matrizTranspuesta[x][y]
+                        print(valor + "|")
+                    break
+                else:
+                    print("debe operar la matriz transpuesta.")
+                break
+            else:
+                temp = temp.siguiente
+                if temp == self.inicio:
+                    return "No hay usuario logueado."
+                    break
+
+    def validaArchivoCargado(self,usuarioLogueado):
+        temp = self.inicio
+        while temp:
+            if temp.usuario == usuarioLogueado:
+                if temp.cargaArchivo:
+                    return True
+                else:
+                    return False
+            else:
+                temp = temp.siguiente
+                if temp == self.inicio:
+                    return False

@@ -52,7 +52,7 @@ def menuSecundario():
             elif opcion == '2':
                 menuTercero()
             elif opcion == '3':
-                print("opcion 3")
+                menuCuarto()
             elif opcion == '4':
                 mostrarUsuarios()
             elif opcion == '5':
@@ -113,8 +113,8 @@ def loguearUsuario():
 
 #limpia logueo
 def limpiarLogueo():
-    logueado= False
-    usuarioLogueado =None
+    lista.logueado= False
+    lista.usuarioLogueado =None
 
 #leer archivo
 def leerArchivo():
@@ -123,19 +123,23 @@ def leerArchivo():
 
     ruta = input("Ingrese ruta de archivo: ")
     if ruta != None:
-        file = xml.dom.minidom.parse(ruta)
-        if file != None:
-            coleccion = file.documentElement
-            resultado = lista.parsearArchivo(coleccion,lista.usuarioLogueado)
-            print(resultado)
-        else:
-            print("archivo invalido.")
+        try:
+            file = xml.dom.minidom.parse(ruta)
+            if file != None:
+                coleccion = file.documentElement
+                resultado = lista.parsearArchivo(coleccion,lista.usuarioLogueado)
+                print(resultado)
+            else:
+                print("archivo invalido.")
+        except OSError:
+            print("archivo invalido o no existe.")
+            pass
     else:
         print("ruta invalida.")
 
 #resolver operaciones
 def menuTercero():
-    if lista.cargaArchivo:
+    if lista.validaArchivoCargado(lista.usuarioLogueado):
         while (True):
             print("")
             print("*" * 10 + "Menu Operaciones" + "*" * 5)
@@ -146,7 +150,7 @@ def menuTercero():
 
             if opcion != None:
                 if opcion == '1':
-                    print("opcion 1")
+                    operarQueue()
                 elif opcion == '2':
                     break
                 else:
@@ -155,6 +159,58 @@ def menuTercero():
                 print("ingrese una opcion valida.")
     else:
         print("cargue un archivo, para operar.")
+
+#operarQueue
+def operarQueue():
+    lista.operarQueue(lista.usuarioLogueado)
+
+#resolver matriz
+def menuCuarto():
+    if lista.validaArchivoCargado(lista.usuarioLogueado):
+        while (True):
+            print("")
+            print("*" * 10 + "Menu Matriz" + "*" * 5)
+            print("1. Ingresar dato")
+            print("2. Operar transpuesta")
+            print("3. Mostrar matriz original")
+            print("4. Mostrar matriz transpuesta")
+            print("5. Regresar")
+
+            opcion = input('Ingrese opcion: ')
+
+            if opcion != None:
+                if opcion == '1':
+                    llenarMatriz()
+                elif opcion == '2':
+                    operarTranspuesta()
+                elif opcion == '3':
+                    mostrarMatrizOriginal()
+                elif opcion == '4':
+                    mostrarMatrizTranspuesta()
+                elif opcion == '5':
+                    break
+                else:
+                    print("ingrese una opcion valida.")
+            else:
+                print("ingrese una opcion valida.")
+    else:
+        print("cargue un archivo, para operar.")
+
+#llenar matriz
+def llenarMatriz():
+    lista.llenarMatriz(lista.usuarioLogueado)
+
+#operar transpuesta
+def operarTranspuesta():
+    lista.operarMatrizTranspuesta(lista.usuarioLogueado)
+
+#mostrar matriz original
+def mostrarMatrizOriginal():
+    lista.mostrarMatrizOriginal(lista.usuarioLogueado)
+
+#mostrar matriz transpuesta
+def mostrarMatrizTranspuesta():
+    lista.mostrarMatrizTranspuesta(lista.usuarioLogueado)
 
 #mostrar usuarios
 def mostrarUsuarios():
